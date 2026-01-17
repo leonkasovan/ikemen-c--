@@ -1,0 +1,23 @@
+{
+  "terminal.integrated.profiles.windows": {
+      "w64devkit": {
+          "path": "F:/w64devkit/bin/sh.exe",
+          "env": {
+              "PATH": "F:\\w64devkit\\bin;F:\\go-go1.25.4\\bin"
+          },
+          "cwd": "${workspaceFolder}"
+      },
+      "MinGW64": {
+          "path": "F:/msys2/usr/bin/bash.exe",
+          "args": [
+              "--login",
+              "-i"
+          ],
+          "env": {
+              "MSYSTEM": "MINGW64",
+              "CHERE_INVOKING": "1"
+          }
+      }
+  },
+  "terminal.integrated.defaultProfile.windows": "w64devkit"
+}
