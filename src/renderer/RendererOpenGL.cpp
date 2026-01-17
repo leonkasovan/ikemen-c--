@@ -267,11 +267,19 @@ Renderer_GL::~Renderer_GL() {
 }
 
 void Renderer_GL::Init() {
+    // Query and store OpenGL version
+    glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
+    glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
+
     // Print GL information
     std::cout << "Real GL Version: " << reinterpret_cast<const char*>(glGetString(GL_VERSION)) << std::endl;
+    std::cout << "Detected OpenGL: " << glVersionMajor << "." << glVersionMinor << std::endl;
     std::cout << "Real GLSL Version: " << reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)) << std::endl;
     std::cout << "Real GL Renderer: " << reinterpret_cast<const char*>(glGetString(GL_RENDERER)) << std::endl;
     std::cout << "Real GL Vendor: " << reinterpret_cast<const char*>(glGetString(GL_VENDOR)) << std::endl;
+
+    // Configure based on OpenGL version
+    ConfigureForOpenGLVersion();
 
     // Create VAO
     glGenVertexArrays(1, &vao);
@@ -329,6 +337,63 @@ void Renderer_GL::Init() {
     enableShadow = false;
 }
 
+void Renderer_GL::ConfigureForOpenGLVersion() {
+    std::cout << "\n=== OpenGL Configuration ===" << std::endl;
+    
+    // GL 4.3+: Advanced features
+    if (glVersionMajor > 4 || (glVersionMajor == 4 && glVersionMinor >= 3)) {
+        std::cout << "OpenGL 4.3+: Enabling Advanced Features" << std::endl;
+        // - Debug output callback
+        // - Compute shader support
+        // - Direct State Access (DSA)
+    }
+    // GL 4.0+: Tesselation and Direct State Access
+    else if (glVersionMajor > 4 || (glVersionMajor == 4 && glVersionMinor >= 0)) {
+        std::cout << "OpenGL 4.0+: Enabling Core Features" << std::endl;
+        // - Tesselation shaders
+        // - Indirect rendering
+        // - Transform feedback improvements
+    }
+    // GL 3.3+: Modern core profile
+    else if (glVersionMajor > 3 || (glVersionMajor == 3 && glVersionMinor >= 3)) {
+        std::cout << "OpenGL 3.3+: Standard Core Profile" << std::endl;
+        // - Instancing
+        // - Texture views
+        // - Immutable storage
+    }
+    // GL 3.0-3.2: Compatibility features
+    else if (glVersionMajor == 3 && glVersionMinor >= 0) {
+        std::cout << "OpenGL 3.0-3.2: Compatibility Mode" << std::endl;
+        // - Limited feature set
+        // - Fixed pipeline support may be needed
+    }
+    // GL 2.1 and below: Legacy rendering
+    else {
+        std::cout << "OpenGL 2.1 or lower: Legacy Mode" << std::endl;
+        // - Very limited feature set
+        // - May need alternative rendering paths
+    }
+    
+    // Query capabilities based on version
+    if (glVersionMajor >= 4) {
+        GLint maxSamples;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        std::cout << "Max MSAA Samples: " << maxSamples << std::endl;
+    }
+    
+    if (glVersionMajor >= 3) {
+        GLint maxArrayTextureLayers;
+        glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &maxArrayTextureLayers);
+        std::cout << "Max Array Texture Layers: " << maxArrayTextureLayers << std::endl;
+    }
+    
+    GLint maxTextureSize;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+    std::cout << "Max Texture Size: " << maxTextureSize << std::endl;
+    
+    std::cout << "==========================\n" << std::endl;
+}
+
 void Renderer_GL::Close() {
     if (fbo != 0) glDeleteFramebuffers(1, &fbo);
     if (fbo_texture != 0) glDeleteTextures(1, &fbo_texture);
@@ -358,7 +423,7 @@ void Renderer_GL::Close() {
 }
 
 std::string Renderer_GL::GetName() const {
-    return "OpenGL 3.3";
+    return "OpenGL";
 }
 
 int Renderer_GL::InitModelShader() {

@@ -276,6 +276,9 @@ public:
     void PrintInfo();
     void PrintCapabilities();
 
+    // ===== OpenGL ES Version Configuration =====
+    void ConfigureForOpenGLESVersion();
+
     private:
     // ===== Internal State =====
     uint32_t fbo;

@@ -175,8 +175,8 @@ struct GLState {
 class IRenderer {
 public:
     // Constructor/Destructor
-    IRenderer() : fbo(0), fbo_texture(0), rbo_depth(0), fbo_f(0), fbo_f_texture(nullptr),
-                   fbo_shadow(0), fbo_shadow_cube_texture(0), fbo_env(0),
+    IRenderer() : fbo(0), fbo_texture(0), rbo_depth(0), glVersionMajor(0), glVersionMinor(0),
+                   fbo_f(0), fbo_f_texture(nullptr), fbo_shadow(0), fbo_shadow_cube_texture(0), fbo_env(0),
                    postVertBuffer(0), vertexBuffer(0), vertexBufferBatch(0), vao(0),
                    enableModel(false), enableShadow(false) {}
     virtual ~IRenderer() {}
@@ -306,11 +306,19 @@ public:
     virtual void PrintInfo() = 0;
     virtual void PrintCapabilities() = 0;
 
+    // ===== OpenGL Version Query =====
+    int GetVersionMajor() const { return glVersionMajor; }
+    int GetVersionMinor() const { return glVersionMinor; }
+
 protected:
     // ===== Internal State =====
     uint32_t fbo;
     uint32_t fbo_texture;
     uint32_t rbo_depth;
+    
+    // OpenGL Version
+    int glVersionMajor;
+    int glVersionMinor;
     
     // MSAA rendering
     uint32_t fbo_f;

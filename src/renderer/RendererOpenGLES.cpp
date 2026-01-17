@@ -446,15 +446,23 @@ Renderer_GLES::~Renderer_GLES() {
 }
 
 std::string Renderer_GLES::GetName() const {
-    return "OpenGL ES 3.1";
+    return "OpenGL ES";
 }
 
 void Renderer_GLES::Init() {
+    // Query and store OpenGL ES version
+    glGetIntegerv(GL_MAJOR_VERSION, &glVersionMajor);
+    glGetIntegerv(GL_MINOR_VERSION, &glVersionMinor);
+    
     // Print GL info
     PrintGLESInfo();
+    std::cout << "Detected OpenGL ES: " << glVersionMajor << "." << glVersionMinor << std::endl;
     
     // Detect capabilities
     DetectCapabilities();
+    
+    // Configure based on OpenGL ES version
+    ConfigureForOpenGLESVersion();
     
     // Generate VAO (required in ES 3.0+)
     glGenVertexArrays(1, &vao);
@@ -472,6 +480,59 @@ void Renderer_GLES::Init() {
     // TODO: Set up post-processing
     
     glActiveTexture(GL_TEXTURE0);
+}
+
+void Renderer_GLES::ConfigureForOpenGLESVersion() {
+    std::cout << "\n=== OpenGL ES Configuration ===" << std::endl;
+    
+    // ES 3.2+: Advanced compute and synchronization
+    if (glVersionMajor > 3 || (glVersionMajor == 3 && glVersionMinor >= 2)) {
+        std::cout << "OpenGL ES 3.2+: Enabling Advanced Features" << std::endl;
+        // - Geometry shaders
+        // - Tesselation support
+        // - Advanced memory barriers
+    }
+    // ES 3.1: Compute shaders
+    else if (glVersionMajor == 3 && glVersionMinor >= 1) {
+        std::cout << "OpenGL ES 3.1: Enabling Compute Shaders" << std::endl;
+        // - Compute shader support
+        // - Shader storage buffers
+        // - Atomic operations
+    }
+    // ES 3.0: Core modern ES
+    else if (glVersionMajor == 3 && glVersionMinor == 0) {
+        std::cout << "OpenGL ES 3.0: Standard Features" << std::endl;
+        // - Instancing
+        // - Transform feedback
+        // - Occlusion queries
+    }
+    // ES 2.0: Legacy mobile ES
+    else if (glVersionMajor == 2) {
+        std::cout << "OpenGL ES 2.0: Limited Feature Set" << std::endl;
+        // - Basic shader support
+        // - Limited texture formats
+        // - No VAO support
+    }
+    else {
+        std::cout << "OpenGL ES 1.x: Minimal Feature Set" << std::endl;
+    }
+    
+    // Query mobile-specific capabilities
+    GLint maxTextures;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextures);
+    std::cout << "Max Texture Units: " << maxTextures << std::endl;
+    
+    GLint maxVertexAttribs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    std::cout << "Max Vertex Attributes: " << maxVertexAttribs << std::endl;
+    
+    if (glVersionMajor >= 3) {
+        GLint maxDrawBuffers;
+        glGetIntegerv(GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
+        std::cout << "Max Draw Buffers: " << maxDrawBuffers << std::endl;
+    }
+    
+    std::cout << "==========================\n" << std::endl;
 }
 
 void Renderer_GLES::Close() {

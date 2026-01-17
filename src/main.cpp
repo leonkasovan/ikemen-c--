@@ -13,21 +13,58 @@
 #endif
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
+#include <iostream>
 #include "embededFont.h"
 #include "renderer/RendererInterfaces.h"
 #include "renderer/Renderer.h"
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
 
 static void error_callback(int error, const char* description) {
-	fprintf(stderr, "Error: %s\n", description);
+	std::cerr << "Error: " << description << std::endl;
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
+// Returns true and fills major/minor with max supported version
+bool getMaxOpenGLVersion(int* major, int* minor) {
+    // Don't show the probe window
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    // Create dummy window with NO version hints
+    // GLFW will create highest available compatibility context
+    GLFWwindow* probe = glfwCreateWindow(1, 1, "", NULL, NULL);
+    if (!probe) {
+        return false;
+    }
+    glfwMakeContextCurrent(probe);
+    
+    // Load GLAD/GLES for the probe context
+#ifdef GLAD_GLES2_IMPLEMENTATION
+    if (!gladLoadGLES2(glfwGetProcAddress)) {
+        std::cerr << "Failed to load GLES2 in probe context" << std::endl;
+        glfwDestroyWindow(probe);
+        glfwDefaultWindowHints();
+        return false;
+    }
+#else
+    if (!gladLoadGL(glfwGetProcAddress)) {
+        std::cerr << "Failed to load GL in probe context" << std::endl;
+        glfwDestroyWindow(probe);
+        glfwDefaultWindowHints();
+        return false;
+    }
+#endif
+    
+    // Query the version we actually got
+    glGetIntegerv(GL_MAJOR_VERSION, major);
+    glGetIntegerv(GL_MINOR_VERSION, minor);
+    
+    // Cleanup
+    glfwDestroyWindow(probe);
+    // Reset hints for next window
+    glfwDefaultWindowHints();    
+    return true;
 }
 
 int main(void) {
@@ -37,18 +74,29 @@ int main(void) {
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
+	// Probe for OpenGL max version
+    int maxMajor, maxMinor;
+	std::cout << "getMaxOpenGLVersion called" << std::endl;
+    if (getMaxOpenGLVersion(&maxMajor, &maxMinor)) {
+        std::cout << "Using OpenGL: " << maxMajor << "." << maxMinor << std::endl;
+    } else {
+		std::cout << "Failed to probe OpenGL version, defaulting to 3.3" << std::endl;
+		maxMajor = 3;
+		maxMinor = 3;
+	}
+
 	// Set GLFW hints for Wayland (optional, uncomment if needed)
 	// glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
 	// glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_PREFER_LIBDECOR);
 
-#ifdef GLAD_GLES2_IMPLEMENTATION
+#ifdef USE_GLES
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, maxMajor);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, maxMinor);
 	glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
 #else
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, maxMajor);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, maxMinor);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
@@ -98,5 +146,3 @@ int main(void) {
 	glfwTerminate();
 	exit(EXIT_SUCCESS);
 }
-
-//! [code]

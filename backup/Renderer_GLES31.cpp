@@ -496,14 +496,3 @@ std::unique_ptr<ShaderProgram_GLES31> Renderer_GLES31::compileShaderProgram(
         return nullptr;
     }
 }
-
-// Add the factory method to RenderInterfaces.h implementation
-Renderer* Renderer::Create(RenderAPI api) {
-    switch (api) {
-        case RenderAPI::OpenGLES_3_1:
-            return new Renderer_GLES31();
-        // Add other APIs here
-        default:
-            throw std::runtime_error("Unsupported render API");
-    }
-}
